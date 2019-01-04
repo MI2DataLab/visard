@@ -15,8 +15,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
+
+from core.views import PathViewSet, ColumnView
+
+router = routers.DefaultRouter()
+router.register(r'paths', PathViewSet)
+# router.register(r'cols', ColumnViewSet, base_name='cols')
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
+    path('api/', include('rest_framework.urls')),
+    path('cols/', ColumnView.as_view()),
+    path('', include(router.urls)),
 ]
