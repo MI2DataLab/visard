@@ -5,8 +5,9 @@ from .models import Path
 
 
 class Column(object):
-    def __init__(self, colname, data):
+    def __init__(self, colname, data_type, data):
         self.colname = colname
+        self.type = data_type
         self.data = data
 
     def __str__(self):
@@ -20,7 +21,8 @@ class PathSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ColumnSerializer(serializers.Serializer):
-    colname = serializers.CharField(max_length=256)
+    colname = serializers.CharField()
+    type = serializers.CharField()
     data = serializers.ListField()
 
     def create(self, validated_data):

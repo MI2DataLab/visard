@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-<title>Plots</title>
+  <title>Plots</title>
 {% endblock %}
 
 {% block content %}
@@ -9,4 +9,23 @@
 {% endblock %}
 
 {% block next %}
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+  var request = new XMLHttpRequest();
+  var columns = ['asd', 'qwe'];
+  var col;
+  for (col in columns){
+      console.log(columns[col]);
+      var url = "http://localhost:8000/cols?colname=" + columns[col];
+      request.open('GET', url);
+      request.onload = function () {
+          var data = JSON.parse(this.response);
+          console.log(data.results)
+      };
+      request.send();
+  }
+</script>
+
 {% endblock %}

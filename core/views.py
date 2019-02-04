@@ -4,25 +4,15 @@ import sys
 from django.shortcuts import render, get_object_or_404
 import pandas as pd
 from rest_framework import viewsets, generics
-# from rest_framework.response import Response
 
 from .serializers import PathSerializer, ColumnSerializer, Column
 from .models import Path
 
 thismodule = sys.modules[__name__]
 thismodule.DATA = {
-    'asd': Column('asd', [1, 3, 5, 2]),
-    'dsf': Column('dsf', ['a', 'b', 'c']),
+    'asd': Column('asd', 'int', [1, 3, 5, 2]),
+    'dsf': Column('dsf', 'str', ['a', 'b', 'c']),
 }
-
-
-# class ColumnViewSet(viewsets.ViewSet):
-#     # Required for the Browsable API renderer to have a nice form.
-#     serializer_class = ColumnSerializer
-#
-#     def list(self, request):
-#         serializer = ColumnSerializer(instance=DATA.values(), many=True)
-#         return Response(serializer.data)
 
 
 class ColumnView(generics.ListAPIView):
@@ -54,7 +44,6 @@ def upload_data(request):
     if request.method == 'POST':
         data_dir = request.POST.get('data_dir')
         path = Path.objects.get_or_create(path=data_dir)
-        print(path[0].pk)
         return plots(request, path[0].pk)
     else:
         return render(request, 'core/upload_data.html', {})
@@ -77,7 +66,7 @@ def sort_pairs(data):
 
 def data_to_columns(data):
     data_dict = data.to_dict('list')
-    data_dict = {name: Column(name, val) for name, val in data_dict.items()}
+    data_dict = {name: Column(name, type(val[0]), val) for name, val in data_dict.items()}
     return data_dict
 
 
@@ -88,5 +77,5 @@ def plots(request, path_id):
     return render(
         request,
         'core/plots.html',
-        {'path_id': path_id, 'sorted_cols': sorted_cols, 'sorted_pairs': sorted_pairs},
+        {'sorted_cols': sorted_cols, 'sorted_pairs': sorted_pairs},
     )

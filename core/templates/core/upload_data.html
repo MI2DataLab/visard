@@ -7,13 +7,13 @@
 {% block content %}
 <div class = "container">
   <div class="wrapper d-flex justify-content-center">
-      <form method="post">{% csrf_token %}
-          <div class="form-group">
-              <label>Data directory</label>
-              <input class="form-control" type="text" placeholder="directory" name="data_dir">
-          </div>
-          <button type="submit" class="btn btn-primary">Generate</button>
-      </form>
+    <form method="post">{% csrf_token %}
+      <div class="form-group">
+        <label>Data directory</label>
+        <input class="form-control" type="text" placeholder="directory" name="data_dir">
+      </div>
+      <button type="submit" class="btn btn-primary">Generate</button>
+    </form>
   </div>
 </div>
 {% endblock %}

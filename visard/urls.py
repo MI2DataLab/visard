@@ -21,8 +21,6 @@ from core.views import PathViewSet, ColumnView
 
 router = routers.DefaultRouter()
 router.register(r'paths', PathViewSet)
-# router.register(r'cols', ColumnViewSet, base_name='cols')
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
