@@ -16,7 +16,7 @@ def pack(sizes_sorted, width):
     for val in sizes_sorted:
         rectangles.append((val, val))
         area += val ** 2
-    height = np.ceil(area / width)
+    height = max(np.ceil(area / width), max(sizes_sorted))
     bins = [(width, height)]
     packer = newPacker(bin_algo=PackingBin.BBF)
 
@@ -29,13 +29,22 @@ def pack(sizes_sorted, width):
     return packer, height
 
 
-def get_size(imp, min_imp, width, max_rect_size):
-    """Calculates size of the square on the picture"""
-    return round((imp - min_imp) / (1 - min_imp) * width * max_rect_size, 2)
+def get_size(imp, max_imp, min_imp, width, max_rect_size, min_rect_size, function):
+    """
+    Calculates size of the plot on the big picture
+    :param function:
+    :return: the size of the square plot (has to be scaled to get pixels)
+    """
+    imp = function(imp)
+    max_imp = function(max_imp)
+    min_imp = function(min_imp)
+    return max(round((imp - min_imp) / (max_imp - min_imp) * width * max_rect_size, 6),
+               round(width * min_rect_size, 6))
 
 
-def gen_picture(filenames, importances, save_dir,
-                min_imp=0.7, max_rect_size=0.33, width_pixels=3000):
+def gen_picture(filenames, importances, save_dir, number_of_plots=-1, min_imp=0.7,
+                max_rect_size=0.33, min_rect_size=0.05, width_pixels=3000,
+                function=lambda x: x):
     """
     Generates one picture with all of the pictures given in filenames.
     The size of the picture is calculated by `get_size` function based on
@@ -43,8 +52,11 @@ def gen_picture(filenames, importances, save_dir,
     :param filenames: filenames, where the pictures are stored
     :param importances: impostance of each picture from `filenames`
     :param save_dir: directory where to save the picture
+    :param number_of_plots: number of plots to show (if `-1`, `min_imp` is used)
     :param min_imp: minimal importance so the picture is still included
+    (used only if `number_of_plots=-1`)
     :param max_rect_size: maximum rectangle size on the picture (between 0 and 1)
+    :param min_rect_size: minimum rectangle size on the picture (between 0 and 1)
     :param width_pixels: the width of the picture in pixels
     """
     # the algorithm doesn't do well with sizes between 0 and 1, it's better to use
@@ -52,19 +64,29 @@ def gen_picture(filenames, importances, save_dir,
     width = 100
     scale = width_pixels / width
     sizes_filenames_dict = dict()
+    if number_of_plots != -1:
+        good_importances = sorted(importances, reverse=True)[:number_of_plots]
+    else:
+        good_importances = importances[importances > min_imp]
+    max_imp = max(good_importances)
+    min_imp = min(good_importances)
     for i, filename in enumerate(filenames):
         imp = importances[i]
-        if imp > min_imp:
-            sizes_filenames_dict[filename] = get_size(imp, min_imp, width, max_rect_size)
+        if imp >= min_imp:
+            size = get_size(imp, max_imp, min_imp, width,
+                            max_rect_size, min_rect_size, function)
+            while size in sizes_filenames_dict.values():
+                size += 1e-5
+            sizes_filenames_dict[filename] = size
     sizes_inv = {val: key for key, val in sizes_filenames_dict.items()}
     sizes_filenames_dict = sorted(sizes_filenames_dict.items(),
                                   key=lambda t: (t[1], t[0]))
     sizes_sorted = [x[1] for x in sizes_filenames_dict]
     packer, height = pack(sizes_sorted, width)
-
     whole_img = np.array(Image.new('RGBA', (int(width * scale), int(height * scale))))
     for i, rect in enumerate(packer[0]):
         size = rect.width
+        # TODO: it's so bad I really have to change it
         filename = sizes_inv[size]
         size_scaled = int(scale * size)
         img = Image.open(filename)
@@ -140,6 +162,7 @@ def generate_plot(data, cols, size=7, bins=20):
         plt.title(col1 + " Histogram")
         filename = col1 + '.png'
         plt.savefig(filename)
+        plt.close()
     elif len(cols) == 2:
         col1 = cols[0]
         col2 = cols[1]
@@ -149,6 +172,7 @@ def generate_plot(data, cols, size=7, bins=20):
         plt.title(col1 + " impact on " + col2)
         filename = col1 + '_' + col2 + '.png'
         plt.savefig(filename)
+        plt.close()
     else:
         raise ValueError('cols should have one or two column names')
     return filename
